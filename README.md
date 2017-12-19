@@ -6,14 +6,16 @@ Docker added recently support for health checks but unfortunatly the docker daem
   
 This is the purpose of this container.  
   
-The image size is only 6MB and memory footprint is kept low (150KB).
+The image size is only 6MB and memory footprint is kept low (less than 1MB).
 
 ## Usage
 By default, healthcare monitor all your running containers and will restart any unhealthy container.  
   
 Run the healthcare container with the following command:
 ```
-docker run -d --name healthcare -v /var/run/docker.sock:/var/run/docker.sock himred/healthcare
+docker run -d --name healthcare -v \
+/var/run/docker.sock:/var/run/docker.sock \
+himred/healthcare
 ```
 Or if you prefer to use a docker-compose file:
 ```
@@ -31,7 +33,9 @@ By default, healthcare run the checks every 60 seconds.
 If you want to change this interval, you must define the variable INTERVAL.  
 For example, this will start healthcare with an interval of 30 seconds:
 ```
-docker run -d --name healthcare -e INTERVAL=30 -v /var/run/docker.sock:/var/run/docker.sock himred/healthcare
+docker run -d --name healthcare -e INTERVAL=30 \
+-v /var/run/docker.sock:/var/run/docker.sock \
+himred/healthcare
 ```
 Of course, you can define this in your docker-compose.yml file as well.
 
