@@ -13,8 +13,8 @@ By default, healthcare monitor all your running containers and will restart any 
   
 Run the healthcare container with the following command:
 ```
-docker run -d --name healthcare -v \
-/var/run/docker.sock:/var/run/docker.sock \
+docker run -d --name healthcare \
+-v /var/run/docker.sock:/var/run/docker.sock \
 himred/healthcare
 ```
 Or if you prefer to use a docker-compose file:
