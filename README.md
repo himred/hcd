@@ -30,7 +30,7 @@ services:
 ```
 ## Configuration
 By default, healthcare run the checks every 60 seconds.  
-If you want to change this interval, you must define the variable INTERVAL.  
+If you want to change this interval, you must define the variable **INTERVAL**.  
 For example, this will start healthcare with an interval of 30 seconds:
 ```
 docker run -d --name healthcare -e INTERVAL=30 \
