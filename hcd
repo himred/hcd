@@ -1,0 +1,161 @@
+#!/bin/sh
+
+#
+# Health Care Daemon (hcd)
+#
+# Version: 1.0
+#
+# Author: Gasmi Salim (salim@gasmi.net)
+#
+
+###########################################
+# Function Log : Display a message to stdout
+# Param 1: The message to display
+###########################################
+function Log
+{
+echo "$(date): $1"
+}
+
+
+###########################################
+# Function DockerGet : Send an HTTP GET request to the docker socket
+# Param 1: The URL to GET
+# Return: The docker reply
+###########################################
+function DockerGet
+{
+curl -s --unix-socket /var/run/docker.sock http://docker$1
+}
+
+###########################################
+# Function DockerPost : Send an HTTP POST request to the docker socket
+# Param 1: The URL to POST
+# Param 2: The data tp send in the form "a=1&b=2&c=3"
+# Return: The docker reply
+###########################################
+function DockerPost
+{
+curl -s --unix-socket /var/run/docker.sock -X POST -d "$2" http://docker$1
+}
+
+###########################################
+# Function Unhealthy : List the unhelathy containers
+# Return: A list of id/name containers
+###########################################
+function Unhealthy
+{
+DockerGet /containers/json | jq '[ .[] | select( .Status | contains("unhealthy")) | .Id + .Names[0] ] | .[]' | tr -d '"'
+}
+
+###########################################
+# Function GetLabel : Get the com.himred.hcd value of a container
+# Param 1: The container id or name
+# Return: The label value (empty if no label)
+###########################################
+function GetLabel
+{
+DockerGet /containers/json | jq ".[] | select( .Id == (\"$1\")) | .Labels | to_entries[] | select ( .key == ( \"com.himred.hcd\")) | .value" | tr -d '"'
+}
+
+
+###########################################
+# Function GetState : Get the state of a container
+# Param 1: The container name
+# Return: The state (empty if container does not exists)
+###########################################
+function GetState
+{
+DockerGet "/containers/json?all=1" | jq ".[] | { name: .Names[] , state: .State} | select (.name == \"/$1\") | .state" | tr -d '"'
+}
+
+###########################################
+# Function Restart : Restart a container
+# Param 1: The container id or name
+# Return: The docker reply
+###########################################
+function Restart
+{
+Log "$2 is unhealthy : restarting the container"
+DockerPost /containers/$1/restart "t=0"
+Log "$2 restarted"
+}
+
+###########################################
+# Function Stop : Stop a container
+# Param 1: The container id or name
+# Return: The docker reply
+###########################################
+function Stop
+{
+Log "$2 is unhealthy : stopping the container"
+DockerPost /containers/$1/stop "t=0"
+Log "$2 stopped"
+}
+
+###########################################
+# Function Start : Start a container
+# Param 1: The container name to start
+# Return: The docker reply
+###########################################
+function Start
+{
+test "$1" = "" && Log "Container name is empty .. unable to start" && return
+
+state=$(GetState "$1")
+test "$state" = "" && Log "Unable to start container $1 : container not found" && return
+test "$state" = "running" && Log "Unable to start container $1 : container already running" && return
+
+Log "Starting $1"
+DockerPost /containers/$1/start "t=0"
+Log "$1 started"
+}
+
+###########################################
+# Function StopAndStart : Stop the faulty container and start another one
+# Param 1: The container id to stop
+# Param 2: The container name to stop
+# Param 3: The action in the form "start container_name"
+# Return: The docker reply
+###########################################
+function StopAndStart
+{
+name=$(echo $3 | cut -f2- -d" ")
+Stop $1 "$2"
+Log "Since $2 is unhealthy and found label '$3', I will start $name"
+Start "$name"
+}
+
+#######################################################################
+# main()
+#######################################################################
+
+# I get the sleep time from env
+sleep=$INTERVAL
+
+test "$sleep" = "" && sleep=60 && Log "variable INTERVAL is not defined, using default value 60"
+Log "hcd started, interval=$sleep"
+
+# The main loop
+while :
+do
+        n=0
+        for i in $(Unhealthy)
+        do
+                n=$((n+1))
+                id=${i%%/*}
+                name=${i##*/}
+                action=$(GetLabel $id)
+                ok=0
+
+                test "$action" = "" && action="restart"
+                test "$action" = "restart" && ok=1 && Restart $id "$name"
+                test "$action" = "stop" && ok=1 && Stop $id "$name"
+                test "$action" = "ignore" && ok=1 && Log "$name is unhealthy but label ignore found, doing nothing"
+                test $ok -eq 0 && echo "$action" | egrep -q "^start " && ok=1 && StopAndStart $id "$name" "$action"
+                test $ok -eq 0 && Log "$name is unhealthy but found an unknwon label ($action), doing nothing"
+        done
+
+        Log "$n unhealthy container(s) found, sleeping $sleep seconds"
+        sleep $sleep
+done
