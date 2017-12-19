@@ -31,7 +31,7 @@ curl -s --unix-socket /var/run/docker.sock http://docker$1
 ###########################################
 # Function DockerPost : Send an HTTP POST request to the docker socket
 # Param 1: The URL to POST
-# Param 2: The data tp send in the form "a=1&b=2&c=3"
+# Param 2: The data to send in the form "a=1&b=2&c=3"
 # Return: The docker reply
 ###########################################
 function DockerPost
@@ -40,7 +40,7 @@ curl -s --unix-socket /var/run/docker.sock -X POST -d "$2" http://docker$1
 }
 
 ###########################################
-# Function Unhealthy : List the unhelathy containers
+# Function Unhealthy : List the unhealthy containers
 # Return: A list of id/name containers
 ###########################################
 function Unhealthy
@@ -50,7 +50,7 @@ DockerGet /containers/json | jq '[ .[] | select( .Status | contains("unhealthy")
 
 ###########################################
 # Function GetLabel : Get the com.himred.hcd value of a container
-# Param 1: The container id or name
+# Param 1: The container id
 # Return: The label value (empty if no label)
 ###########################################
 function GetLabel
@@ -72,7 +72,6 @@ DockerGet "/containers/json?all=1" | jq ".[] | { name: .Names[] , state: .State}
 ###########################################
 # Function Restart : Restart a container
 # Param 1: The container id or name
-# Return: The docker reply
 ###########################################
 function Restart
 {
@@ -96,7 +95,6 @@ Log "$2 stopped"
 ###########################################
 # Function Start : Start a container
 # Param 1: The container name to start
-# Return: The docker reply
 ###########################################
 function Start
 {
@@ -116,7 +114,6 @@ Log "$1 started"
 # Param 1: The container id to stop
 # Param 2: The container name to stop
 # Param 3: The action in the form "start container_name"
-# Return: The docker reply
 ###########################################
 function StopAndStart
 {
