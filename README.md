@@ -48,7 +48,7 @@ If a container has the label com.himred.hcd, healthcare behavior will be the fol
 |----------|-------------|------|
 | com.himred.hcd | ignore | When unhealthy, healthcare will not restart the container |
 | com.himred.hcd | stop   | When unhealthy, healthcare will stop the container  |
-| com.himred.hcd | start *file.yml* | When unhealthy, healthcare will stop the container and run *docker-compose up -d* on the file provided. The file is searched in the /hcd directory. You'll need to bind this directory to your host to use this feature |
+| com.himred.hcd | start&nbsp;*file.yml* | When unhealthy, healthcare will stop the container and run *docker-compose up -d* on the file provided (the file is searched in the /hcd directory).<br>Bind /hcd to your host and create yml files to use this feature.<br>This is useful to start a backup service when main service is unhealthy |
 
 ## Logs
 Healthcare output all it's logs to stdout.
