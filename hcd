@@ -99,13 +99,16 @@ Log "$2 stopped"
 function Start
 {
 test "$1" = "" && Log "Docker compose file name is empty .. unable to start" && return
+echo "$1" | egrep -iq "\.yml$"
+test $? -ne 0 && Log "$1 does not have the .yml extension, the filename must end with .yml" && return
 
 file=/hcd/$1
-
 test ! -f $file && Log "Unable to find file $file ... have you mounted the volume /hcd ?" && return
 
-Log "Starting service using docker-compose file $file"
-r=$(/usr/local/bin/docker-compose -f $file up -d 2>&1)
+srv=$(echo $1 | cut -f1 -d.)
+Log "Starting service $srv using docker-compose file $file"
+
+r=$(/usr/local/bin/docker-compose -p $srv -f $file up -d 2>&1)
 ret=$?
 test $ret -eq 0 && Log "$1 Started : $r"
 test $ret -ne 0 && Log "$1 Start failed: $r"
