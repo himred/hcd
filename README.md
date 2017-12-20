@@ -48,7 +48,7 @@ If a container has the label com.himred.hcd, healthcare behavior will be the fol
 |----------|-------------|------|
 | com.himred.hcd | ignore | When unhealthy, healthcare will not restart the container |
 | com.himred.hcd | stop   | When unhealthy, healthcare will stop the container  |
-| com.himred.hcd | start XXX | When unhealthy, healthcare will stop the container and start XXX |
+| com.himred.hcd | start docker_compose_file.yml | When unhealthy, healthcare will stop the container and run docker-compose on the file provided. The file is searched in the /hcd directory |
 
 ## Logs
 Healthcare output all it's logs to stdout.
