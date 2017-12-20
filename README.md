@@ -1,4 +1,4 @@
-# healthcare
+# hcd : Health Care Daemon for docker
 A lightweight process for managing unhealthy docker containers  
 
 ## Overview
@@ -6,7 +6,7 @@ Docker added recently support for health checks but unfortunatly the docker daem
   
 This is the purpose of this container.  
   
-The image size is only 6MB and memory footprint is kept low (less than 1MB).
+The image size is only 13MB and memory footprint is kept low (less than 1MB).
 
 ## Usage
 By default, healthcare monitor all your running containers and will restart any unhealthy container.  
