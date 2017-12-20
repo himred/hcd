@@ -3,7 +3,7 @@
 #
 # Health Care Daemon (hcd)
 #
-# Version: 1.0
+# Version: 1.1
 #
 # Author: Gasmi Salim (salim@gasmi.net)
 #
@@ -93,35 +93,38 @@ Log "$2 stopped"
 }
 
 ###########################################
-# Function Start : Start a container
-# Param 1: The container name to start
+# Function Start: Start a container
+# Param 1: The yml docker-compose file
 ###########################################
 function Start
 {
-test "$1" = "" && Log "Container name is empty .. unable to start" && return
+test "$1" = "" && Log "Docker compose file name is empty .. unable to start" && return
 
-state=$(GetState "$1")
-test "$state" = "" && Log "Unable to start container $1 : container not found" && return
-test "$state" = "running" && Log "Unable to start container $1 : container already running" && return
+file=/hcd/$1
 
-Log "Starting $1"
-DockerPost /containers/$1/start "t=0"
-Log "$1 started"
+test ! -f $file && Log "Unable to find file $file ... have you mounted the volume /hcd ?" && return
+
+Log "Starting service using docker-compose file $file"
+r=$(/usr/local/bin/docker-compose -f $file up -d 2>&1)
+ret=$?
+test $ret -eq 0 && Log "$1 Started : $r"
+test $ret -ne 0 && Log "$1 Start failed: $r"
 }
 
 ###########################################
-# Function StopAndStart : Stop the faulty container and start another one
+# Function StopAndStart : Stop the faulty container and create another one
 # Param 1: The container id to stop
 # Param 2: The container name to stop
-# Param 3: The action in the form "start container_name"
+# Param 3: The action in the form "create docker_compose_file.yml"
 ###########################################
 function StopAndStart
 {
-name=$(echo $3 | cut -f2- -d" ")
 Stop $1 "$2"
-Log "Since $2 is unhealthy and found label '$3', I will start $name"
+name=$(echo $3 | cut -f2- -d" ")
+Log "Since $2 is unhealthy and found label '$3', I will create $name"
 Start "$name"
 }
+
 
 #######################################################################
 # main()
